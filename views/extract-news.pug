@@ -18,14 +18,13 @@ block content
             else
                 h1(style="color:red;")=k.toUpperCase()
             each v in i
-                h1.pub_name(style="display:none")=v.pub_name
                 a(href=v.article_link, style="text-decoration:underline; color:black")
                     h3=v.article_title.toUpperCase()
                     small=v.article_published
                     br
                 if v.article_image
                     img(src=v.article_image, width=400, height=300)
-                div.t_txt=v.article_text
+                div.t_txt(data-value=v.pub_name) #{v.article_text}
     script(src="/javascripts/truncatise.js")
     script(src="/javascripts/sentence-tokenizer.js")
     script(src="/javascripts/string.js")
@@ -56,7 +55,7 @@ block content
                         paragraph += `<p>${token[p]} ${token[p-1]}</p>`
                     }
                 }
-                $(this).html(S(truncatise(S(paragraph).replaceAll('undefined', '').s, opts)).ensureRight(` (${$(this).siblings('h1.pub_name').eq(i).text()})`).s)
+                $(this).html(S(truncatise(S(paragraph).replaceAll('undefined', '').s, opts)).ensureRight(` (${$(this).attr('data-value')})`).s)
             })
             
         })

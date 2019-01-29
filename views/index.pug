@@ -14,7 +14,7 @@ block content
         ul
           each r, id in i
             li #{r.url} 
-              a(data-value={name:r.name, fqdn:id, link:r.url, selector: r.selector, section: v}, class="badge badge-secondary") Scrape
+              a(data-value={name:r.name, fqdn:id, link:r.url, selector: r.selector, section: v, pos:r.pos}, class="badge badge-secondary") Scrape
               span.resp
   br
   h3 Columnists
@@ -35,11 +35,12 @@ block content
       var selector = JSON.parse($(this).attr('data-value')).selector
       var section = JSON.parse($(this).attr('data-value')).section
       var pub_name = JSON.parse($(this).attr('data-value')).name
+      var pos = JSON.parse($(this).attr('data-value')).pos
       var _t = $(this)
       $.ajax({
         method: 'POST',
         url: '/scrape',
-        data: {article_link: art, fqdn: fqdn, selector: selector, section: section, pub_name: pub_name},
+        data: {article_link: art, fqdn: fqdn, pos:pos, selector: selector, section: section, pub_name: pub_name},
         beforeSend: function( xhr ) {
           _t.html('Loading...')
         }

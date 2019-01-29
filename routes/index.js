@@ -17,6 +17,7 @@ router.get('/', function(req, res, next) {
 
 router.post('/scrape', function(req, res, next){
   let selector = req.body.selector
+  let pos = req.body.pos
   let scraper = require(`../parsers/${req.body.fqdn}.js`)
   let protocol = url(req.body.article_link).protocol
   let hostname = url(req.body.article_link).hostname
@@ -46,7 +47,7 @@ router.post('/scrape', function(req, res, next){
               ct++
               scraper.ArticleContent(raw_element, function(ers, result){
                 if(ers) throw ers;
-                fs.writeFile(`reports/headlines/${fqdn}-${ct}.json`, JSON.stringify(result, null, 4), 'utf-8', function(err){
+                fs.writeFile(`reports/headlines/${pos}_${fqdn}-${ct}.json`, JSON.stringify(result, null, 4), 'utf-8', function(err){
                   if(err) throw err;
                   console.log(`Saved ${element}`)
                   return cb(null, `Saved ${element}`)
@@ -56,7 +57,7 @@ router.post('/scrape', function(req, res, next){
               ct++
               scraper.ArticleContent(raw_element, function(ers, result){
                 if(ers) throw ers;
-                fs.writeFile(`reports/business/${fqdn}-${ct}.json`, JSON.stringify(result, null, 4), 'utf-8', function(err){
+                fs.writeFile(`reports/business/${pos}_${fqdn}-${ct}.json`, JSON.stringify(result, null, 4), 'utf-8', function(err){
                 // fs.writeFile(`reports/business/${fqdn}.json`, JSON.stringify(result, null, 4), 'utf-8', function(err){
                   if(err) throw err;
                   console.log(`Saved ${element}`)
