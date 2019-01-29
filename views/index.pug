@@ -1,0 +1,141 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+   a(href="/generate/GovRel") GovRel
+   a(href="/generate/NewsRecap") NewsRecap
+   a(href="/columnpicks") Columnpicks
+  
+  //- div=JSON.stringify(data)
+  ul
+    each i, v in data
+      li=v
+        ul
+          each r, id in i
+            li #{r.url} 
+              a(data-value={name:r.name, fqdn:id, link:r.url, selector: r.selector, section: v}, class="badge badge-secondary") Scrape
+              span.resp
+  br
+  h3 Columnists
+  ul
+    each j, w in columnists
+      li=w
+        ul
+          li
+            img(src=j.img, height=100, width=100)
+            a(data-value={author:w, link: j.link, img:j.img, crawler:j.crawler}, class="badge badge-primary") Scrape
+            span.resp2
+  
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js")
+  script.
+    $(document).on('click', 'a[class="badge badge-secondary"]', function(e){
+      var art = JSON.parse($(this).attr('data-value')).link
+      var fqdn = JSON.parse($(this).attr('data-value')).fqdn
+      var selector = JSON.parse($(this).attr('data-value')).selector
+      var section = JSON.parse($(this).attr('data-value')).section
+      var pub_name = JSON.parse($(this).attr('data-value')).name
+      var _t = $(this)
+      $.ajax({
+        method: 'POST',
+        url: '/scrape',
+        data: {article_link: art, fqdn: fqdn, selector: selector, section: section, pub_name: pub_name},
+        beforeSend: function( xhr ) {
+          _t.html('Loading...')
+        }
+      }).done(function(response){
+        _t.html('Scrape')
+        _t.siblings('span.resp').text(`${new Date().toDateString()} ${new Date().toLocaleTimeString()}`)
+        console.log(response)
+      }).fail(function(xhr, status, error){
+        _t.html('Scrape')
+        _t.siblings('span.resp').text('Try again')
+        console.log(error)
+      })
+    })
+
+    $(document).on('click', 'a[class="badge badge-primary"]', function(e){
+      e.preventDefault()
+      var c_link = JSON.parse($(this).attr('data-value')).link
+      var c_crawler = JSON.parse($(this).attr('data-value')).crawler
+      var c_img = JSON.parse($(this).attr('data-value')).img
+      var c_author = JSON.parse($(this).attr('data-value')).author
+      var _t = $(this)
+      $.ajax({
+        method: 'POST',
+        url: '/columnists',
+        data: {c_link: c_link, c_crawler: c_crawler, c_img: c_img, c_author: c_author},
+        beforeSend: function( xhr ) {
+          _t.html('Loading...')
+        }
+      }).done(function(response){
+        _t.html('Scrape')
+        _t.siblings('span.resp2').text(`${new Date().toDateString()} ${new Date().toLocaleTimeString()}`)
+        console.log(response)
+      }).fail(function(xhr, status, error){
+        _t.html('Scrape')
+        _t.siblings('span.resp2').text('Try again')
+        console.log(error)
+      })
+    });
+
+    //- $(document).on('click', 'span#extract', function(e){
+    //-   e.preventDefault()
+    //-   var _t = $(this)
+    //-   $.ajax({
+    //-     method: 'POST',
+    //-     url: '/generate',
+    //-     data: {},
+    //-     beforeSend: function( xhr ) {
+    //-       _t.html('Extracting...')
+    //-     }
+    //-   }).done(function(response){
+    //-     _t.html('Extract Report');
+    //-     _t.siblings('span.resp2').text(`${new Date().toDateString()} ${new Date().toLocaleTimeString()}`);
+    //-     var doc = new Document()
+    //-     $.each(response, function(i, e){
+    //-       var cleanParagraph = e.article_text.split('\n\n')
+    //-       var paragraphs = ''
+    //-       for(var i = 0; i < cleanParagraph.length; i++){
+    //-         if(i % 2 == 0){
+    //-           //- paragraphs.push(`${cleanParagraph[i]} ${cleanParagraph[i+1]}`)
+    //-           paragraphs += `${cleanParagraph[i]} ${cleanParagraph[i+1]}`
+    //-         }else{
+    //-           //- paragraphs.push('')
+    //-           paragraphs += '\n\n'
+    //-         }
+    //-       }
+          
+    //-       console.log(paragraphs)
+    //-       var content = new Paragraph(paragraphs)
+          
+    //-       doc.Styles.createParagraphStyle("Heading2", "Heading 2")
+    //-         .basedOn("Normal")
+    //-         .next("Normal")
+    //-         .quickFormat()
+    //-         .size(26)
+    //-         .bold()
+    //-         .underline("single", "002b80")
+    //-         .spacing({ before: 240, after: 120 });
+    //-       var title = new Paragraph(e.article_title).heading2()
+    //-       //- var content = new Paragraph(paragraph)
+          
+
+    //-       //- doc.addParagraph(section)
+    //-       doc.addParagraph(title)
+    //-       doc.addParagraph(content)
+          
+    //-     })
+        
+    //-     var packer = new Packer()
+    //-     packer.toBlob(doc).then(blob => {
+    //-       console.log(blob)
+    //-       saveAs(blob, `GovRel NewsBits ${new Date().toLocaleTimeString()}.docx`)
+    //-       console.log("Document created successfully")
+    //-     })
+    //-   }).fail(function(xhr, status, error){
+    //-     _t.html('Extract Report')
+    //-     _t.siblings('span.resp2').text('Try again')
+    //-     console.log(error)
+    //-   })
+    //- })

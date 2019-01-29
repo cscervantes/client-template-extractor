@@ -1,0 +1,48 @@
+extends layout
+block css
+    style.
+        * {
+            font-size: 10px;
+        }
+block content
+    button(onclick="Export2Doc('contentD', 'ColumnPicks')") Export as Document
+    div#contentD
+        h1= title
+        each i, v in data
+            h1(style="color:red;")=v.toUpperCase()
+            each v in i
+                p
+                    a(href=v.article_link, style="text-decoration:underline; color:black")
+                        h3(style="display:inline-block;")=v.article_title 
+                    h3(style="display:inline; margin-left:10px") – #{v.article_author} 
+                    small #{v.article_published}
+                if v.article_image
+                    img(src=v.article_image, width=250, height=250)
+                div.t_txt=v.article_text
+
+    script(src="/javascripts/sentence-tokenizer.js")
+    script(src="/javascripts/string.js")
+    script.
+        $(document).ready(function(){
+            var Tokenizer = require('sentence-tokenizer');
+            var tokenizer = new Tokenizer('Chuck');
+            var S = require('string')
+            
+            //- console.log(tokenizer.getSentences())
+            $('div.t_txt').each(function(i, e){
+                var txt = $(this).text()
+                tokenizer.setEntry(txt)
+                var token = tokenizer.getSentences(txt).map(e => e).join('\n\n').split('\n\n')
+                var paragraph = ''
+                for(var p = 0; p < token.length; p++){
+                    if(p % 2 == 0){
+                        paragraph += `<p>${token[p]} ${token[p-1]}</p>`
+                    }
+                }
+                $(this).html(S(paragraph).replaceAll('undefined', '').s)
+            })
+            
+        })
+        
+
+        
