@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer')
 var truncatise = require('truncatise')
 var Tokenizer = require('sentence-tokenizer');
 var tokenizer = new Tokenizer('Chuck');
+var moment = require('moment')
 exports.ArticleLink = (data, cb) => {
     try{
       if(process.platform === 'win32'){
@@ -100,14 +101,17 @@ exports.ArticleContent = (data, cb) => {
         var $ = cheerio.load(body)
         var raw_html = JSON.parse($('script[type="application/ld+json"]').html())
         var article_text = raw_html.articleBody
-        tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
+        // tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
         var article_title = S(S(raw_html.headline).decodeHTMLEntities().s).collapseWhitespace().s
         var article_published = raw_html.datePublished
         jsonBody.article_title = S(article_title).splitLeft(' | ')[0]
-        jsonBody.article_published = article_published
+        var tempDate = moment(new Date(article_published)).utcOffset(-4).format('LLLL')
+        jsonBody.article_published = moment(new Date(tempDate)).add(1, 'days').utcOffset(8).format('LLLL')
+        // jsonBody.article_published = article_published
         jsonBody.article_image = null
         // jsonBody.article_raw = article_text
-        jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        // jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        jsonBody.article_text = `<div>${article_text}</div>`
         return cb(null, jsonBody)
       }
     })

@@ -36,26 +36,21 @@ block content
             var S = require('string')
 
             var opts = {
-                TruncateLength: 5,
-                TruncateBy : "paragraphs",
-                Strict : false,
-                StripHTML : false,
-                // Suffix : ' (Read More)'
-                Suffix: ''
-            }
-            
-            //- console.log(tokenizer.getSentences())
+                    TruncateLength: 5,
+                    TruncateBy : "paragraphs",
+                    Strict : true,
+                    StripHTML : false,
+                    //- Suffix : '...'
+                    
+                }
             $('div.t_txt').each(function(i, e){
+                $(e).children().eq(i).removeAttr('class')
+                opts.Suffix = ` (${$(this).attr('data-value')})<br><br><br>`
                 var txt = $(this).text()
                 tokenizer.setEntry(txt)
-                var token = tokenizer.getSentences(txt).map(e => e).join('\n\n').split('\n\n')
-                var paragraph = ''
-                for(var p = 0; p < token.length; p++){
-                    if(p % 2 == 0){
-                        paragraph += `<p>${token[p]} ${token[p-1]}</p>`
-                    }
-                }
-                $(this).html(S(truncatise(S(paragraph).replaceAll('undefined', '').s, opts)).ensureRight(` (${$(this).attr('data-value')})`).s)
+                var token = tokenizer.getSentences(txt).map(e => e).join(' ')
+                var paragraph = token
+                $(this).html(truncatise(S(paragraph).s, opts))
             })
             
         })

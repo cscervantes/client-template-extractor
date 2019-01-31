@@ -3,6 +3,7 @@ var S = require('string')
 var cheerio = require('cheerio')
 var Tokenizer = require('sentence-tokenizer');
 var tokenizer = new Tokenizer('Chuck');
+var moment = require('moment')
 exports.ColumnLinks = (data, cb) => {
     request(data.c_link, function(error, response, body){
         if(error){
@@ -39,10 +40,10 @@ exports.ColumnArticle = (data, cb) => {
             var uncleaneDate = S($('script[type="application/ld+json"]').html()).decodeHTMLEntities().s
             var article_published = S(uncleaneDate).between('"datePublished": "', '",').s
             var ignoreSelector = [
-                'div[id="art-head-group"]', 'div[id="billboard_article"]',
+                'div[id="art-head-group"]', 'div[id="billboard_article"]', '*:empty', 'p:contains(Click here)',
                 'p[style="color:#989898;font-size:14px;"]', 'div[id="related_block"]',
                 'div.facebook-philstar-embed', '#inserted_instream', '#inserted_mrec',
-                'div[class="teads-adCall"]', 'div[id="article-new-featured"]',
+                'div[class="teads-adCall"]', 'div[id="article-new-featured"]', 'figure', 'p:last-child',
                 'div[id="rn-lbl"]', 'div[id^=read-next]', '#article_social_trending',
                 '#article_disclaimer', '#article_tags', '.-ob-div', '#lsmr-lbl',
                 '#lsmr-wrap', '#ch-follow-us', '.view-comments', ,'script', 'noscript', 'style'
@@ -53,13 +54,15 @@ exports.ColumnArticle = (data, cb) => {
         
             var raw_html = $('div[id="sports_article_writeup"]').html()
             var content = raw_html
-            tokenizer.setEntry(S(S(S(content).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)
+            // tokenizer.setEntry(S(S(S(content).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)
             jsonBody.article_title = S(S(article_title).decodeHTMLEntities().s).collapseWhitespace().s
-            jsonBody.article_published = article_published
+            // jsonBody.article_published = article_published
+            jsonBody.article_published = moment(new Date(article_published)).utcOffset(8).format('LLLL')
             jsonBody.article_image = data.c_img
             jsonBody.article_link = data.c_link
             jsonBody.article_author = data.c_author
-            jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+            // jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+            jsonBody.article_text = `<div>${raw_html}</div>`
             return cb(null, jsonBody)
         }
     })

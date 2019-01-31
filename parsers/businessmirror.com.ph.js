@@ -6,7 +6,7 @@ const puppeteer = require('puppeteer')
 var truncatise = require('truncatise')
 var Tokenizer = require('sentence-tokenizer');
 var tokenizer = new Tokenizer('Chuck');
-
+var moment = require('moment')
 exports.ArticleLink = (data, cb) => {
     try{
       request(data.url, function(error, response, body){
@@ -82,7 +82,7 @@ exports.ArticleContent = (data, cb) => {
         // var article_published = S(uncleaneDate).between('"datePublished": "', '",').s
         var article_published = $('article header time.entry-date').attr('datetime')
         var ignoreSelector = [
-          'div[class="td-post-header"]', 'div[id="billboard_article"]',
+          'div[class="td-post-header"]', 'div[id="billboard_article"]', '*:empty', 'div.abh_box',
           'div[class="uk-grid uk-grid-large uk-margin-bottom"]', 'div[class^="google-auto-placed"]',
           'p[style="color:#989898;font-size:14px;"]', 'div[id="related_block"]', 'div[class^="adsbymahimeta"]',
           'div.facebook-philstar-embed', '#inserted_instream', '#inserted_mrec', 'div[class="uk-visible-small uk-margin-top uk-margin-bottom"]',
@@ -91,20 +91,22 @@ exports.ArticleContent = (data, cb) => {
           '#article_disclaimer', '#article_tags', '.-ob-div', '#lsmr-lbl', 'footer',
           '#lsmr-wrap', '#ch-follow-us', '.view-comments', ,'script', 'noscript', 'style'
         ]
+
         ignoreSelector.forEach(function(element){
           $(element).remove()
         })
-    
+        
         var raw_html = $('article[id^=post-]').html()
-        var article_text = raw_html
-        tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
         var image = $('article img').attr('src')
+        // tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
         // console.log($('article[id="article_level_wrap"] div[id="article_content"] img'))
         jsonBody.article_title = S(S(article_title).decodeHTMLEntities().s).collapseWhitespace().s
-        jsonBody.article_published = article_published
+        jsonBody.article_published = moment(new Date(article_published)).utc().format('LLLL')
+        // jsonBody.article_published = article_published
         jsonBody.article_image = image || null
         // jsonBody.article_raw = article_text
-        jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')        
+        // jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        jsonBody.article_text = `<div>${raw_html}</div>`      
         return cb(null, jsonBody)
       }
     })

@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer')
 var truncatise = require('truncatise')
 var Tokenizer = require('sentence-tokenizer');
 var tokenizer = new Tokenizer('Chuck');
+var moment = require('moment')
 exports.ArticleLink = (data, cb) => {
   try{
     request(data.url, function(error, response, body){
@@ -68,27 +69,31 @@ exports.ArticleContent = (data, cb) => {
         var uncleaneDate = S($('script[type="application/ld+json"]').eq(-1).html()).decodeHTMLEntities().s
         var article_published = S(uncleaneDate).between('"datePublished": "', '",').s
         var ignoreSelector = [
-          'div[id="art-head-group"]', 'div[id="billboard_article"]',
-          'p[style="color:#989898;font-size:14px;"]',
+          'div[id="art-head-group"]', 'div[id="billboard_article"]', 'p:contains(READ:)', 'p:contains(RELATED:)', '*:empty',
+          'p[style="color:#989898;font-size:14px;"]', 'div[id^="attachment_"]',
           'div[class="teads-adCall"]', 'div[id="article-new-featured"]',
           'div[id="rn-lbl"]', 'div[id^=read-next]', '#article_social_trending',
           '#article_disclaimer', '#article_tags', '.-ob-div', '#lsmr-lbl',
           '#lsmr-wrap', '#ch-follow-us', '.view-comments', ,'script', 'noscript', 'style'
         ]
+        var image = $('div#art_body_wrap div[id^="attachment_"] img').eq(0).attr('data-cfsrc')
+        // console.log(image)
         ignoreSelector.forEach(function(element){
           $(element).remove()
         })
     
-        var raw_html = $('article[id="article_level_wrap"]').html()
+        var raw_html = $('article[id="article_level_wrap"] #article_content').html()
         var article_text = raw_html
-        tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
-        var image = $('article[id="article_level_wrap"] div[id="article_content"] img').attr('data-cfsrc')
+        // tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)        
+        
         // console.log($('article[id="article_level_wrap"] div[id="article_content"] img'))
         jsonBody.article_title = S(S(article_title).decodeHTMLEntities().s).collapseWhitespace().s
-        jsonBody.article_published = article_published
+        jsonBody.article_published = moment(new Date(article_published)).utcOffset(-8).format('LLLL')
+        // jsonBody.article_published = article_published
         jsonBody.article_image = image || null
         // jsonBody.article_raw = article_text
-        jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        // jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        jsonBody.article_text = `<div>${raw_html}</div>`
         return cb(null, jsonBody)
       }
     })

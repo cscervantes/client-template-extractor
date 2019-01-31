@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer')
 // var truncatise = require('truncatise')
 var Tokenizer = require('sentence-tokenizer');
 var tokenizer = new Tokenizer('Chuck');
+var moment = require('moment')
 exports.ArticleLink = (data, cb) => {
     try{
       request(data.url, function(error, response, body){
@@ -62,19 +63,29 @@ exports.ArticleContent = (data, cb) => {
           Suffix: ''
         }
         var $ = cheerio.load(body)
-        $('ul[class="op-related-articles"]').remove()
-        $('div[class="iwantbar"]').remove()
+        var ignoreSelector = [
+          'ul[class="op-related-articles"]', 'div.embed-wrap', 'div[class="iwantbar"]',
+          '.op-interactive', '.twitter-tweet', '*:empty',
+        ]
+        var article_published = $('meta[itemprop="datePublished"]').attr('content')
+        ignoreSelector.forEach(function(element){
+          $(element).remove()
+        })
         var raw_html = $('div[itemprop="articleBody"]').html()
         var raw_image = $('script[type="application/ld+json"]').html()
         var article_text = raw_html
-        tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)
-        var article_title = $('title').html()
-        var article_published = $('meta[itemprop="datePublished"]').attr('content')
+        // tokenizer.setEntry(S(S(S(article_text).decodeHTMLEntities().s).stripTags().s).collapseWhitespace().s)
+        var article_title = S(S($('title').html()).decodeHTMLEntities().s).collapseWhitespace().s
+        
+        // console.log(article_published)
         jsonBody.article_title = S(S(S(article_title).splitLeft(' | ')[0]).decodeHTMLEntities().s).collapseWhitespace().s
-        jsonBody.article_published = article_published
+        var tempDate = moment(new Date(article_published)).utcOffset(-8).format('LLLL')
+        jsonBody.article_published = moment(new Date(tempDate)).add(1, 'days').utcOffset(8).format('LLLL')
+        // jsonBody.article_published = article_published
         jsonBody.article_image = S(raw_image).between('"ImageObject","url":"', '",').s || null
         // jsonBody.article_raw = article_text
-        jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        // jsonBody.article_text = tokenizer.getSentences().map(v=>S(v).collapseWhitespace().s).join('\n\n')
+        jsonBody.article_text = `<div>${raw_html}</div>`
         return cb(null, jsonBody)
       }
     })

@@ -32,14 +32,9 @@ block content
             $('div.t_txt').each(function(i, e){
                 var txt = $(this).text()
                 tokenizer.setEntry(txt)
-                var token = tokenizer.getSentences(txt).map(e => e).join('\n\n').split('\n\n')
-                var paragraph = ''
-                for(var p = 0; p < token.length; p++){
-                    if(p % 2 == 0){
-                        paragraph += `<p>${token[p]} ${token[p-1]}</p>`
-                    }
-                }
-                $(this).html(S(paragraph).replaceAll('undefined', '').s)
+                var token = tokenizer.getSentences(txt).map(e => e).join(' ')
+                var paragraph = token
+                $(this).html(S(paragraph).s)
             })
             
         })
